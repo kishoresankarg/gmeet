@@ -1,97 +1,45 @@
 import logging
+from motor.motor_asyncio import AsyncIOMotorClient
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-class MockDatabase:
-    """In-memory mock database for testing"""
-    def __init__(self):
-        self.transcripts = {}
-        self.counter = 0
-    
-    def __getitem__(self, key):
-        """Support dict-like access for collections (returns self)"""
-        return self
-    
-    async def insert_one(self, doc):
-        self.counter += 1
-        doc_id = str(self.counter)
-        doc_copy = doc.copy()
-        doc_copy["_id"] = doc_id
-        self.transcripts[doc_id] = doc_copy
-        
-        class FakeResult:
-            def __init__(self, inserted_id):
-                self.inserted_id = inserted_id
-        return FakeResult(doc_id)
-    
-    async def find_one(self, query):
-        if "_id" in query:
-            doc_id = query["_id"]
-            return self.transcripts.get(doc_id)
-        return None
-    
-    def find(self, query=None):
-        class MockCursor:
-            def __init__(self, items):
-                self.items = list(items.values())
-                self.skip_n = 0
-                self.limit_n = None
-            
-            def skip(self, n):
-                self.skip_n = n
-                return self
-            
-            def limit(self, n):
-                self.limit_n = n
-                return self
-            
-            async def __aiter__(self):
-                result = self.items[self.skip_n:]
-                if self.limit_n:
-                    result = result[:self.limit_n]
-                for item in result:
-                    yield item
-        
-        return MockCursor(self.transcripts)
-    
-    async def find_one_and_update(self, query, update, return_document=False):
-        if "_id" in query:
-            doc_id = query["_id"]
-            if doc_id in self.transcripts:
-                if "$set" in update:
-                    self.transcripts[doc_id].update(update["$set"])
-                return self.transcripts[doc_id]
-        return None
-    
-    async def delete_one(self, query):
-        if "_id" in query:
-            doc_id = query["_id"]
-            if doc_id in self.transcripts:
-                del self.transcripts[doc_id]
-                class FakeResult:
-                    deleted_count = 1
-                return FakeResult()
-        class FakeResult:
-            deleted_count = 0
-        return FakeResult()
-
-
 class Database:
-    client = None
+    client: AsyncIOMotorClient = None
     db = None
 
 
 async def connect_to_mongo():
-    """Initialize database connection"""
-    logger.info("Initializing in-memory database for development")
-    Database.db = MockDatabase()
-    logger.info("Database ready")
+    """Initialize MongoDB connection"""
+    try:
+        logger.info(f"Connecting to MongoDB at {settings.MONGODB_URL}")
+        Database.client = AsyncIOMotorClient(settings.MONGODB_URL)
+        Database.db = Database.client[settings.DATABASE_NAME]
+
+        # Verify connection
+        await Database.client.admin.command("ping")
+        logger.info(f"Connected to MongoDB database: {settings.DATABASE_NAME}")
+
+        # Create indexes for better query performance
+        transcripts_collection = Database.db["transcripts"]
+        await transcripts_collection.create_index("createdAt")
+        await transcripts_collection.create_index("title")
+        await transcripts_collection.create_index(
+            [("title", "text"), ("content", "text"), ("summary", "text")]
+        )
+        logger.info("Database indexes created successfully")
+
+    except Exception as e:
+        logger.error(f"Failed to connect to MongoDB: {str(e)}")
+        raise RuntimeError(f"Could not connect to MongoDB: {str(e)}")
 
 
 async def close_mongo_connection():
-    """Close database connection"""
-    logger.info("Closing database connection")
+    """Close MongoDB connection"""
+    if Database.client:
+        Database.client.close()
+        logger.info("MongoDB connection closed")
 
 
 def get_database():

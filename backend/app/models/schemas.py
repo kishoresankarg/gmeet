@@ -43,6 +43,12 @@ class MeetingTranscript(BaseModel):
     actionItems: Optional[List[ActionItem]] = None
 
 
+class SaveAnalysisRequest(BaseModel):
+    summary: Optional[str] = None
+    keyPoints: Optional[List[str]] = None
+    actionItems: Optional[List[dict]] = None
+
+
 class HealthResponse(BaseModel):
     status: str
     message: str

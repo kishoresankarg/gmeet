@@ -2,9 +2,15 @@ import apiClient from './api';
 import { MeetingTranscript, AnalysisResult, ActionItem } from '@/types';
 
 export const transcriptAPI = {
-  // Analyze transcript
+  // Analyze transcript (standalone, no save)
   analyze: async (content: string): Promise<AnalysisResult> => {
     const { data } = await apiClient.post('/transcripts/analyze', { content });
+    return data;
+  },
+
+  // Analyze an existing transcript by ID (saves summary to MongoDB)
+  analyzeById: async (id: string): Promise<AnalysisResult> => {
+    const { data } = await apiClient.post(`/transcripts/${id}/analyze`);
     return data;
   },
 
@@ -59,6 +65,12 @@ export const transcriptAPI = {
       params: { format },
       responseType: 'blob',
     });
+    return data;
+  },
+
+  // Save analysis results to a transcript
+  saveAnalysis: async (id: string, analysis: { summary: string; keyPoints: string[]; actionItems: any[] }): Promise<MeetingTranscript> => {
+    const { data } = await apiClient.put(`/transcripts/${id}/analysis`, analysis);
     return data;
   },
 
