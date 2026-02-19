@@ -65,14 +65,14 @@ export default function Home() {
   return (
     <>
       <Toaster position="top-right" />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-25 to-indigo-100 py-6 sm:py-8 lg:py-12 px-3 sm:px-4 lg:px-6">
+        <div className="max-w-5xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <div className="text-center mb-6 sm:mb-8 lg:mb-12">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-2 sm:mb-3 px-2">
               Meeting Notes Generator
             </h1>
-            <p className="text-lg text-gray-600">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 px-2 leading-relaxed">
               Transform your meeting transcripts into actionable insights with AI
             </p>
           </div>

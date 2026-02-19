@@ -45,17 +45,18 @@ export const Alert: React.FC<AlertProps> = ({ type, title, message, onClose }) =
   const Icon = type === 'success' ? CheckCircle : AlertCircle;
 
   return (
-    <div className={`rounded-lg border ${style.bg} ${style.border} p-4 mb-4`}>
-      <div className="flex">
-        <Icon className={`w-5 h-5 ${style.icon} flex-shrink-0 mt-0.5`} />
-        <div className="ml-3 flex-1">
-          <h3 className={`text-sm font-medium ${style.title}`}>{title}</h3>
-          <p className={`text-sm mt-1 ${style.message}`}>{message}</p>
+    <div className={`rounded-xl border ${style.bg} ${style.border} p-3 sm:p-4 mb-4 shadow-sm`}>
+      <div className="flex gap-3">
+        <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${style.icon} flex-shrink-0 mt-0.5`} />
+        <div className="flex-1 min-w-0">
+          <h3 className={`text-sm sm:text-base font-semibold ${style.title}`}>{title}</h3>
+          <p className={`text-xs sm:text-sm mt-1 ${style.message} break-words`}>{message}</p>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="ml-3 text-gray-400 hover:text-gray-600"
+            className="ml-3 text-gray-400 hover:text-gray-600 flex-shrink-0"
+            aria-label="Close alert"
           >
             ×
           </button>
