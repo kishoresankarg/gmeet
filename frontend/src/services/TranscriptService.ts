@@ -24,9 +24,10 @@ export const transcriptService = {
     return response.data;
   },
 
-  // Export to Notion
-  async exportToNotion(transcriptId: string): Promise<any> {
-    const response = await apiClient.post(`/transcripts/${transcriptId}/export/notion`);
+
+  // Export to Trello
+  async exportToTrello(transcriptId: string): Promise<any> {
+    const response = await apiClient.post(`/transcripts/${transcriptId}/export/trello`);
     return response.data;
   },
 
@@ -69,6 +70,20 @@ export const transcriptService = {
   // Get a specific transcript
   async getTranscript(id: string): Promise<any> {
     const response = await apiClient.get(`/transcripts/${id}`);
+    return response.data;
+  },
+
+  // Get calendar links
+  async getCalendarLinks(transcriptId: string): Promise<any[]> {
+    const response = await apiClient.get(`/transcripts/${transcriptId}/calendar-links`);
+    return response.data;
+  },
+
+  // Export to ICS
+  async exportICS(transcriptId: string): Promise<Blob> {
+    const response = await apiClient.get(`/transcripts/${transcriptId}/export/ics`, {
+      responseType: 'blob',
+    });
     return response.data;
   },
 

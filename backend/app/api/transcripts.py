@@ -10,7 +10,8 @@ from app.models.schemas import (
 from app.services.claude_service import ClaudeService
 from app.services.transcript_service import TranscriptService
 from app.services.export_service import ExportService
-from app.services.notion_service import NotionService
+from app.services.trello_service import TrelloService
+from app.services.calendar_service import CalendarService
 from app.core.database import get_database
 import logging
 import uuid
@@ -22,7 +23,8 @@ router = APIRouter()
 
 claude_service = ClaudeService()
 export_service = ExportService()
-notion_service = NotionService()
+trello_service = TrelloService()
+calendar_service = CalendarService()
 
 
 @router.post("/analyze", response_model=TranscriptAnalysisResponse)
@@ -316,12 +318,14 @@ async def delete_transcript(
         raise HTTPException(status_code=500, detail="Failed to delete transcript")
 
 
-@router.post("/{transcript_id}/export/notion")
-async def export_to_notion(
+
+
+@router.post("/{transcript_id}/export/trello")
+async def export_to_trello(
     transcript_id: str,
     db=Depends(get_database),
 ):
-    """Export transcript to Notion"""
+    """Export transcript action items to Trello"""
     try:
         service = TranscriptService(db)
         transcript = await service.get_transcript(transcript_id)
@@ -329,20 +333,76 @@ async def export_to_notion(
         if not transcript:
             raise HTTPException(status_code=404, detail="Transcript not found")
 
-        result = await notion_service.export_to_notion(transcript)
+        result = await trello_service.export_tasks(transcript)
 
         if result and result.get("success"):
             return {
-                "message": "Successfully exported to Notion",
-                "notion_id": result.get("data", {}).get("id"),
+                "message": f"Successfully exported {result.get('cards_created')} tasks to Trello",
+                "total": result.get("total_tasks"),
             }
         else:
-            logger.warning("Notion export failed or no API key configured")
             return {
-                "message": "Export to Notion requires NOTION_API_KEY and NOTION_DATABASE_ID in environment"
+                "success": False,
+                "message": result.get("error", "Trello export failed or no API key configured"),
+                "hint": "Check TRELLO_API_KEY, TRELLO_TOKEN, and TRELLO_LIST_ID in environment"
             }
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error exporting to Notion: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to export to Notion")
+        logger.error(f"Error exporting to Trello: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to export to Trello")
+
+@router.get("/{transcript_id}/calendar-links")
+async def get_calendar_links(
+    transcript_id: str,
+    db=Depends(get_database),
+):
+    """Get calendar deep links for all tasks in a transcript"""
+    try:
+        service = TranscriptService(db)
+        transcript = await service.get_transcript(transcript_id)
+        if not transcript:
+            raise HTTPException(status_code=404, detail="Transcript not found")
+        
+        links = []
+        meeting_title = transcript.get("title", "Meeting")
+        for task in transcript.get("actionItems", []):
+            task_links = {
+                "id": task.get("id"),
+                "google": calendar_service.generate_google_calendar_link(task, meeting_title),
+                "outlook": calendar_service.generate_outlook_calendar_link(task, meeting_title)
+            }
+            links.append(task_links)
+        
+        return links
+    except Exception as e:
+        logger.error(f"Error getting calendar links: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate calendar links")
+
+@router.get("/{transcript_id}/export/ics")
+async def export_to_ics(
+    transcript_id: str,
+    db=Depends(get_database),
+):
+    """Export all tasks in a transcript as an .ics calendar file"""
+    try:
+        service = TranscriptService(db)
+        transcript = await service.get_transcript(transcript_id)
+        if not transcript:
+            raise HTTPException(status_code=404, detail="Transcript not found")
+        
+        ics_content = calendar_service.generate_ics_content(
+            transcript.get("actionItems", []),
+            transcript.get("title", "Meeting")
+        )
+        
+        return StreamingResponse(
+            iter([ics_content]),
+            media_type="text/calendar",
+            headers={
+                "Content-Disposition": f"attachment; filename=meeting_tasks.ics"
+            },
+        )
+    except Exception as e:
+        logger.error(f"Error exporting to ICS: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to export calendar file")

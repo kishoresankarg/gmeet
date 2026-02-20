@@ -56,7 +56,7 @@ export const TranscriptInput: React.FC<TranscriptInputProps> = ({ onSubmit, load
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Give your meeting a name..."
-              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-lg transition-all outline-none placeholder:text-slate-400"
+              className="w-full px-5 py-4 bg-slate-50 text-slate-900 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-lg transition-all outline-none placeholder:text-slate-400"
             />
           </div>
 
@@ -70,7 +70,7 @@ export const TranscriptInput: React.FC<TranscriptInputProps> = ({ onSubmit, load
               onPaste={handlePaste}
               placeholder="Paste the conversation, notes, or transcript here..."
               rows={8}
-              className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 font-mono text-sm transition-all outline-none resize-none placeholder:text-slate-400"
+              className="w-full px-5 py-4 bg-slate-50 text-slate-900 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 font-mono text-sm transition-all outline-none resize-none placeholder:text-slate-400"
             />
           </div>
         </div>

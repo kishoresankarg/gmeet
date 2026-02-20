@@ -22,6 +22,17 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost:8000"]
 
+    # Trello
+    TRELLO_API_KEY: str = ""
+    TRELLO_TOKEN: str = ""
+    TRELLO_LIST_ID: str = ""
+    TRELLO_BOARD_ID: str = ""
+
+    # Calendar
+    GOOGLE_CALENDAR_API_KEY: str = ""
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+
     class Config:
         env_file = ".env"
         case_sensitive = True

@@ -1,13 +1,28 @@
 import React, { useState } from 'react';
-import { MeetingTranscript, AnalysisResult } from '@/types';
+import { MeetingTranscript, AnalysisResult, ActionItem } from '@/types';
 import { formatDate } from '@/lib/utils';
-import { Trash2, Eye, Share2, ChevronDown, ChevronUp, X, FileText, CheckCircle2, CircleDot, AlertCircle } from 'lucide-react';
+import {
+  Trash2,
+  Eye,
+  Share2,
+  ChevronDown,
+  ChevronUp,
+  X,
+  FileText,
+  CheckCircle2,
+  CircleDot,
+  AlertCircle,
+  Calendar,
+  ExternalLink,
+  Download
+} from 'lucide-react';
 
 interface TranscriptListProps {
   transcripts: MeetingTranscript[];
   onSelect?: (transcript: MeetingTranscript) => void;
   onDelete?: (id: string) => void;
-  onExportToNotion?: (id: string) => void;
+  onExportToTrello?: (id: string) => void;
+  onExportToCalendar?: (id: string, type: 'google' | 'outlook' | 'ics', title: string, items: ActionItem[]) => void;
   loading?: boolean;
 }
 
@@ -15,14 +30,16 @@ export const TranscriptList: React.FC<TranscriptListProps> = ({
   transcripts,
   onSelect,
   onDelete,
-  onExportToNotion,
+  onExportToTrello,
+  onExportToCalendar,
   loading = false,
 }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [detailTranscript, setDetailTranscript] = useState<MeetingTranscript | null>(null);
+  const [showCalMenuId, setShowCalMenuId] = useState<string | null>(null);
 
   const getPriorityColor = (priority: string) => {
-    switch (priority) {
+    switch (priority.toLowerCase()) {
       case 'high':
         return 'text-red-600 bg-red-50 border border-red-200';
       case 'medium':
@@ -35,7 +52,7 @@ export const TranscriptList: React.FC<TranscriptListProps> = ({
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'completed':
         return <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />;
       case 'in-progress':
@@ -79,11 +96,10 @@ export const TranscriptList: React.FC<TranscriptListProps> = ({
                     {transcript.title}
                   </h4>
                   <span
-                    className={`inline-block px-2 sm:px-3 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${
-                      transcript.summary
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}
+                    className={`inline-block px-2 sm:px-3 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${transcript.summary
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                      }`}
                   >
                     {transcript.summary ? 'Analyzed' : 'Pending'}
                   </span>
@@ -111,6 +127,44 @@ export const TranscriptList: React.FC<TranscriptListProps> = ({
                     <span className="hidden sm:inline">View</span>
                   </button>
                 )}
+
+                {/* Calendar Options in Row */}
+                {transcript.actionItems && transcript.actionItems.length > 0 && onExportToCalendar && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowCalMenuId(showCalMenuId === transcript.id ? null : transcript.id)}
+                      className="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 px-2 py-1.5 rounded-lg transition text-xs sm:text-sm font-medium"
+                      title="Add to Calendar"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      <span className="hidden lg:inline">Calendar</span>
+                    </button>
+
+                    {showCalMenuId === transcript.id && (
+                      <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-xl shadow-xl border border-slate-100 z-50 overflow-hidden">
+                        <button
+                          onClick={() => { onExportToCalendar(transcript.id, 'google', transcript.title, transcript.actionItems || []); setShowCalMenuId(null); }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-50 text-xs font-bold text-slate-700"
+                        >
+                          <ExternalLink size={14} className="text-blue-500" /> Google Calendar
+                        </button>
+                        <button
+                          onClick={() => { onExportToCalendar(transcript.id, 'outlook', transcript.title, transcript.actionItems || []); setShowCalMenuId(null); }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-50 text-xs font-bold text-slate-700"
+                        >
+                          <ExternalLink size={14} className="text-indigo-500" /> Outlook
+                        </button>
+                        <button
+                          onClick={() => { onExportToCalendar(transcript.id, 'ics', transcript.title, transcript.actionItems || []); setShowCalMenuId(null); }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-50 border-t border-slate-50 text-xs font-bold text-emerald-600"
+                        >
+                          <Download size={14} /> Download .ICS
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <button
                   onClick={() =>
                     setExpandedId(expandedId === transcript.id ? null : transcript.id)
@@ -124,13 +178,14 @@ export const TranscriptList: React.FC<TranscriptListProps> = ({
                     <ChevronDown className="w-4 h-4" />
                   )}
                 </button>
-                {onExportToNotion && (
+                {onExportToTrello && (
                   <button
-                    onClick={() => onExportToNotion(transcript.id)}
-                    className="inline-flex items-center gap-1 text-purple-600 hover:text-purple-800 hover:bg-purple-50 px-2 py-1.5 rounded-lg transition text-xs sm:text-sm"
-                    title="Export to Notion"
+                    onClick={() => onExportToTrello(transcript.id)}
+                    className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1.5 rounded-lg transition text-xs sm:text-sm"
+                    title="Export to Trello"
                   >
-                    <Share2 className="w-4 h-4" />
+                    <FileText className="w-4 h-4" />
+                    <span className="hidden lg:inline">Trello</span>
                   </button>
                 )}
                 {onDelete && (
@@ -280,7 +335,7 @@ export const TranscriptList: React.FC<TranscriptListProps> = ({
                             )}
                             {item.deadline && (
                               <span className="text-xs text-gray-600">
-                                <strong>Deadline:</strong> {item.deadline}
+                                <strong>Date:</strong> {item.deadline}
                               </span>
                             )}
                           </div>

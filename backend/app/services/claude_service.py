@@ -30,21 +30,26 @@ class ClaudeService:
             return self._mock_analysis(content)
         
         try:
+            from datetime import datetime
+            current_date = datetime.now().strftime("%Y-%m-%d")
             prompt = f"""
-Analyze this meeting transcript and provide:
-1. A concise summary (2-3 sentences)
-2. Key points discussed (as a list)
-3. Action items with description, owner (if mentioned), deadline, and priority
+Analyze this meeting transcript and provide a highly accurate summary and action items.
 
-Return the response as valid JSON with this structure:
+CRITICAL DATE INSTRUCTIONS: 
+Today's date is strictly {current_date}. 
+If the transcript mentions relative dates, days of the week, or timeframes for a task (e.g. "tomorrow", "tmrw", "tmorw", "next week", "next monday", "tuesday", "tuesdat", "wednesday", etc.), you MUST aggressively correct any typos and calculate the exact YYYY-MM-DD date using today's date ({current_date}).
+For days of the week (like "Wednesday"), find the date of the *next* occurrence of that day.
+Do NOT output words or dashes. If no deadline is mentioned at all or implied, you must use the JSON `null` literal (not a string).
+
+Return the response as valid JSON with this exact structure:
 {{
-    "summary": "...",
-    "keyPoints": ["point1", "point2", ...],
+    "summary": "A concise 2-3 sentence summary...",
+    "keyPoints": ["point1", "point2"],
     "actionItems": [
         {{
             "description": "task description",
             "owner": "name or null",
-            "deadline": "date or null",
+            "deadline": "2023-12-25", 
             "priority": "high/medium/low",
             "status": "pending"
         }}
@@ -177,11 +182,42 @@ Meeting Transcript:
             task_full = task_match.group(1).strip()
             
             # Extract deadline
-            deadline_match = re.search(r'by\s+([A-Za-z]+\s+\d+)', task_full)
-            deadline = deadline_match.group(1) if deadline_match else None
+            deadline = None
+            task_desc = task_full
             
-            # Remove deadline from description
-            task_desc = re.sub(r'\s+by\s+[A-Za-z]+\s+\d+', '', task_full).strip()
+            # Helper for explicit relative parsing in mock
+            from datetime import timedelta
+            today_date = datetime.utcnow()
+            task_lower = task_full.lower()
+            
+            if "tomorrow" in task_lower or "tmrw" in task_lower or "tmorw" in task_lower:
+                deadline = (today_date + timedelta(days=1)).strftime("%Y-%m-%d")
+                task_desc = re.sub(r'(?i)by\s+(tomorrow|tmrw|tmorw)|tomorrow|tmrw|tmorw', '', task_full).strip()
+            elif "next week" in task_lower:
+                deadline = (today_date + timedelta(days=7)).strftime("%Y-%m-%d")
+                task_desc = re.sub(r'(?i)by\s+next week|next week', '', task_full).strip()
+            # Advanced Day Name Parsing
+            else:
+                day_names = {
+                    'monday': 0, 'tuesday': 1, 'tuesdat': 1, 
+                    'wednesday': 2, 'wednesdat': 2, 'thursday': 3, 
+                    'friday': 4, 'saturday': 5, 'sunday': 6
+                }
+                found_day = False
+                for day, day_idx in day_names.items():
+                    if day in task_lower:
+                        days_ahead = day_idx - today_date.weekday()
+                        if days_ahead <= 0: days_ahead += 7
+                        deadline = (today_date + timedelta(days=days_ahead)).strftime("%Y-%m-%d")
+                        task_desc = re.sub(rf'(?i)by\s+(next )?{day}|(next )?{day}', '', task_full).strip()
+                        found_day = True
+                        break
+                
+                if not found_day:
+                    deadline_match = re.search(r'by\s+([A-Za-z]+\s+\d+)', task_full)
+                    if deadline_match:
+                        deadline = deadline_match.group(1)
+                        task_desc = re.sub(r'\s+by\s+[A-Za-z]+\s+\d+', '', task_full).strip()
             if not task_desc or len(task_desc) < 3:
                 continue
             

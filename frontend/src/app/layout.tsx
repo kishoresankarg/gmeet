@@ -1,13 +1,11 @@
 import '@/styles/globals.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Cursor } from '@/components/Cursor';
 import { Navbar } from '@/components/Navbar';
 
-const inter = Inter({ subsets: ['latin'] });
-
 export const metadata: Metadata = {
-  title: 'MeetPulse | AI Meeting Notes Generator',
-  description: 'Transform your meeting transcripts into actionable insights with AI-powered analysis and generator.',
+  title: 'MeetPulse | AI Insights',
+  description: 'Transform your meetings into actionable insights.',
 };
 
 export default function RootLayout({
@@ -16,18 +14,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className={`${inter.className} min-h-screen bg-white text-gray-900`}>
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&family=Unbounded:wght@300;400;700;900&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body>
+        <Cursor />
         <Navbar />
-        <main>{children}</main>
-
-        {/* Simple Footer */}
-        <footer className="bg-gray-50 border-t border-gray-200 py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p className="text-gray-500 text-sm">
-              &copy; {new Date().getFullYear()} MeetPulse. All rights reserved.
-            </p>
-          </div>
+        {children}
+        <footer>
+          <div className="footer-logo">MEET<span>.</span>PULSE</div>
+          <span className="footer-copy">© {new Date().getFullYear()} MeetPulse — AI Insights</span>
+          <ul className="footer-links">
+            <li><a href="#">GitHub</a></li>
+            <li><a href="#">Docs</a></li>
+            <li><a href="#">Issues</a></li>
+          </ul>
         </footer>
       </body>
     </html>

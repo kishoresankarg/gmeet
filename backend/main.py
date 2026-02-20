@@ -17,8 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Import routers
-from app.api import transcripts, health
+from app.api import transcripts, health, calendar
 from app.core.database import connect_to_mongo, close_mongo_connection
 
 # Lifespan context
@@ -53,6 +52,7 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router)
 app.include_router(transcripts.router, prefix="/api/transcripts", tags=["transcripts"])
+app.include_router(calendar.router, prefix="/api/calendar", tags=["calendar"])
 
 
 @app.get("/")
