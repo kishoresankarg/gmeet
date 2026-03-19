@@ -19,15 +19,20 @@ pipeline {
         stage('Run Containers') {
             steps {
                 echo "Starting containers..."
+                // Build the project name for network discovery
                 sh 'docker compose up -d'
+                
+                // Connect Jenkins to the compose network so it can resolve the backend container name
+                // Note: 'gmeet_default' is the default network name based on the folder 'gmeet'
+                sh 'docker network connect gmeet_default jenkins || true'
             }
         }
 
         stage('Test Backend') {
             steps {
                 echo "Verifying backend health..."
-                // Added --retry to ensure it waits for the container to actually start
-                sh 'curl --retry 5 --retry-delay 5 http://localhost:8000/health'
+                // Using the container name instead of localhost for container-to-container communication
+                sh 'curl --retry 5 --retry-delay 5 http://meeting_notes_backend:8000/health'
             }
         }
     }
