@@ -14,7 +14,12 @@ async def connect_to_mongo():
     """Initialize MongoDB connection"""
     try:
         logger.info(f"Connecting to MongoDB at {settings.MONGODB_URL}")
-        Database.client = AsyncIOMotorClient(settings.MONGODB_URL)
+        Database.client = AsyncIOMotorClient(
+            settings.MONGODB_URL,
+            serverSelectionTimeoutMS=5000,
+            tls=True,
+            tlsAllowInvalidCertificates=True
+        )
         Database.db = Database.client[settings.DATABASE_NAME]
 
         # Verify connection

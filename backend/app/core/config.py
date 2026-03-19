@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     CLAUDE_MODEL: str = "claude-3-5-sonnet-20241022"
 
     # Database
-    MONGODB_URL: str = "mongodb://localhost:27017"
+    MONGODB_URL: str = "mongodb+srv://kishoresankarg23cse_db_user:1234%40sankar@cluster0.1cmrszx.mongodb.net/"
     DATABASE_NAME: str = "meeting_notes_db"
 
     # Environment

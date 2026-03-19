@@ -258,7 +258,7 @@ export const TranscriptList: React.FC<TranscriptListProps> = ({
 
                 {!transcript.summary && (
                   <p className="text-sm text-gray-500 italic">
-                    This transcript hasn't been analyzed yet.
+                    This transcript hasn&apos;t been analyzed yet.
                   </p>
                 )}
               </div>

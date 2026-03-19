@@ -63,7 +63,7 @@ const TrelloBoard: React.FC<TrelloBoardProps> = ({ boardId = 'wAkk4hkM' }) => {
                                 <AlertCircle size={48} className="text-slate-300 mb-4" />
                                 <h4 className="text-slate-900 font-black text-lg mb-2">Board Connection Pending</h4>
                                 <p className="text-slate-500 text-sm max-w-xs font-medium">
-                                    If the board doesn't appear above, please check your Trello visibility settings or use the dedicated link.
+                                    If the board doesn&apos;t appear above, please check your Trello visibility settings or use the dedicated link.
                                 </p>
                             </div>
                         </div>
@@ -86,13 +86,13 @@ const TrelloBoard: React.FC<TrelloBoardProps> = ({ boardId = 'wAkk4hkM' }) => {
                             <div className="flex gap-3">
                                 <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-black flex-shrink-0 mt-0.5">2</div>
                                 <p className="text-xs text-slate-600 font-bold leading-relaxed">
-                                    Click the <span className="text-slate-900 italic">"Workspace"</span> or <span className="text-slate-900 italic">"Private"</span> button top-left.
+                                    Click the <span className="text-slate-900 italic">&quot;Workspace&quot;</span> or <span className="text-slate-900 italic">&quot;Private&quot;</span> button top-left.
                                 </p>
                             </div>
                             <div className="flex gap-3">
                                 <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-black flex-shrink-0 mt-0.5">3</div>
                                 <p className="text-xs text-slate-600 font-bold leading-relaxed">
-                                    Change setting to <span className="text-emerald-600 py-0.5 px-1 bg-emerald-50 rounded">"Public"</span> for live embed visibility.
+                                    Change setting to <span className="text-emerald-600 py-0.5 px-1 bg-emerald-50 rounded">&quot;Public&quot;</span> for live embed visibility.
                                 </p>
                             </div>
                         </div>
@@ -109,7 +109,7 @@ const TrelloBoard: React.FC<TrelloBoardProps> = ({ boardId = 'wAkk4hkM' }) => {
             <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
                     <p className="text-blue-900 font-black text-xs uppercase mb-2">Auto-Sync</p>
-                    <p className="text-blue-800/70 text-sm font-medium">Cards created via "Analyze Transcript" appear here instantly after clicking Export.</p>
+                    <p className="text-blue-800/70 text-sm font-medium">Cards created via &quot;Analyze Transcript&quot; appear here instantly after clicking Export.</p>
                 </div>
                 <div className="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100">
                     <p className="text-emerald-900 font-black text-xs uppercase mb-2">Interactive</p>

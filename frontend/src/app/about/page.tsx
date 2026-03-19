@@ -40,13 +40,13 @@ export default function AboutPage() {
                     <div className="prose prose-lg lg:prose-xl text-gray-600 font-medium">
                         <h2 className="text-3xl font-bold text-gray-900 mb-8">Our Mission</h2>
                         <p className="mb-8">
-                            In today's fast-paced remote and hybrid work environments, communication is constant. But communication without clarity leads to confusion. We built MeetPulse to bridge that gap.
+                            In today&apos;s fast-paced remote and hybrid work environments, communication is constant. But communication without clarity leads to confusion. We built MeetPulse to bridge that gap.
                         </p>
                         <p className="mb-8">
-                            By leveraging the latest breakthroughs in LLMs (Large Language Models), we've created a tool that understands the nuances of human conversation. Whether it's a technical sync, a creative brainstorm, or a board meeting, our AI identifies the threads that matter most.
+                            By leveraging the latest breakthroughs in LLMs (Large Language Models), we&apos;ve created a tool that understands the nuances of human conversation. Whether it&apos;s a technical sync, a creative brainstorm, or a board meeting, our AI identifies the threads that matter most.
                         </p>
                         <p>
-                            Our goal is to give every team member an hour back in their day. That's time you could spend on deep work, family, or just catching your breath.
+                            Our goal is to give every team member an hour back in their day. That&apos;s time you could spend on deep work, family, or just catching your breath.
                         </p>
                     </div>
                 </div>
@@ -79,7 +79,7 @@ export default function AboutPage() {
                         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl" />
                         <h2 className="text-3xl lg:text-4xl font-extrabold text-white mb-6 relative">Have questions or feedback?</h2>
                         <p className="text-slate-400 text-lg mb-10 max-w-xl mx-auto relative">
-                            We're always looking to improve. Reach out to us and let us know how we can make MeetPulse better for you.
+                            We&apos;re always looking to improve. Reach out to us and let us know how we can make MeetPulse better for you.
                         </p>
                         <button className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all">
                             <Mail className="w-5 h-5" />
