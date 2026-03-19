@@ -40,8 +40,7 @@ pipeline {
     post {
         always {
             echo "Cleaning up..."
-            sh 'docker compose down'
-            cleanWs()
+           
         }
         success {
             echo "GitHub Hook Build Successful!"
