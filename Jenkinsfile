@@ -11,15 +11,15 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
-                echo "Building images using docker-compose..."
-                sh 'docker-compose build'
+                echo "Building images using docker compose..."
+                sh 'docker compose build'
             }
         }
 
         stage('Run Containers') {
             steps {
                 echo "Starting containers..."
-                sh 'docker-compose up -d'
+                sh 'docker compose up -d'
             }
         }
 
@@ -35,7 +35,7 @@ pipeline {
     post {
         always {
             echo "Cleaning up..."
-            sh 'docker-compose down'
+            sh 'docker compose down'
             cleanWs()
         }
         success {
