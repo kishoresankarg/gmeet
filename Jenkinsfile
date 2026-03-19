@@ -1,99 +1,48 @@
 pipeline {
     agent any
 
-    environment {
-        // Update these with your actual registry details
-        REGISTRY_URL = "your-registry-url" 
-        REGISTRY_CREDENTIALS_ID = "docker-registry-credentials"
-        
-        DOCKER_IMAGE_BACKEND = "${REGISTRY_URL}/meetpulse-backend"
-        DOCKER_IMAGE_FRONTEND = "${REGISTRY_URL}/meetpulse-frontend"
-        DOCKER_TAG = "${env.BUILD_NUMBER}"
-    }
-
     stages {
-        stage('Checkout') {
+        stage('Clone') {
             steps {
+                // Using 'checkout scm' is better for automatic builds triggered by GitHub
                 checkout scm
             }
         }
 
-        stage('Registry Login') {
+        stage('Build Docker Images') {
             steps {
-                script {
-                    docker.withRegistry("https://${REGISTRY_URL}", REGISTRY_CREDENTIALS_ID) {
-                        echo "Successfully authenticated with registry ${REGISTRY_URL}"
-                    }
-                }
+                echo "Building images using docker-compose..."
+                sh 'docker-compose build'
             }
         }
 
-        stage('Build Backend') {
+        stage('Run Containers') {
             steps {
-                dir('backend') {
-                    script {
-                        docker.build("${DOCKER_IMAGE_BACKEND}:${DOCKER_TAG}")
-                    }
-                }
+                echo "Starting containers..."
+                sh 'docker-compose up -d'
             }
         }
 
-        stage('Push Backend') {
+        stage('Test Backend') {
             steps {
-                script {
-                    docker.withRegistry("https://${REGISTRY_URL}", REGISTRY_CREDENTIALS_ID) {
-                        docker.image("${DOCKER_IMAGE_BACKEND}:${DOCKER_TAG}").push()
-                        docker.image("${DOCKER_IMAGE_BACKEND}:${DOCKER_TAG}").push("latest")
-                    }
-                }
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
-                dir('frontend') {
-                    script {
-                        docker.build("${DOCKER_IMAGE_FRONTEND}:${DOCKER_TAG}")
-                    }
-                }
-            }
-        }
-
-        stage('Push Frontend') {
-            steps {
-                script {
-                    docker.withRegistry("https://${REGISTRY_URL}", REGISTRY_CREDENTIALS_ID) {
-                        docker.image("${DOCKER_IMAGE_FRONTEND}:${DOCKER_TAG}").push()
-                        docker.image("${DOCKER_IMAGE_FRONTEND}:${DOCKER_TAG}").push("latest")
-                    }
-                }
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                script {
-                    echo "Deploying application with Docker Compose..."
-                    // In a real production scenario, you would pull the images from the registry
-                    // and use a production-specific docker-compose.yml or swarm/k8s.
-                    sh "docker-compose up -d"
-                    
-                    echo "Waiting for services to be healthy..."
-                    sh "docker-compose ps --format '{{.Service}} {{.Health}}' | grep -v 'healthy' && exit 1 || exit 0"
-                }
+                echo "Verifying backend health..."
+                // Added --retry to ensure it waits for the container to actually start
+                sh 'curl --retry 5 --retry-delay 5 http://localhost:8000/health'
             }
         }
     }
 
     post {
         always {
+            echo "Cleaning up..."
+            sh 'docker-compose down'
             cleanWs()
         }
         success {
-            echo "Pipeline completed successfully! Images pushed to ${REGISTRY_URL}"
+            echo "GitHub Hook Build Successful!"
         }
         failure {
-            echo "Pipeline failed!"
+            echo "Build Failed! Check the console output."
         }
     }
 }
