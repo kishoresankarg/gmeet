@@ -11,10 +11,10 @@ pipeline {
 
         stage('Cleanup Old Containers') {
             steps {
-                echo "Force cleaning old containers and networks..."
+                echo "Cleaning old containers..."
 
                 sh '''
-                docker compose down -v --remove-orphans || true
+                docker-compose down -v || true
                 docker rm -f meeting_notes_backend meeting_notes_frontend || true
                 docker network prune -f || true
                 '''
@@ -24,21 +24,20 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 echo "Building Docker images..."
-                sh 'docker compose build'
+                sh 'docker-compose build'
             }
         }
 
         stage('Run Containers') {
             steps {
-                echo "Starting fresh containers..."
-                sh 'docker compose up -d'
+                echo "Starting containers..."
+                sh 'docker-compose up -d'
             }
         }
 
         stage('Wait for Backend') {
             steps {
-                echo "Waiting for backend to become healthy..."
-
+                echo "Waiting for backend..."
                 sh '''
                 sleep 10
                 docker ps
@@ -48,7 +47,7 @@ pipeline {
 
         stage('Test Backend') {
             steps {
-                echo "Testing backend health endpoint..."
+                echo "Testing backend..."
 
                 sh '''
                 docker run --rm \
@@ -65,7 +64,7 @@ pipeline {
             echo "Cleanup after build..."
 
             sh '''
-            docker compose down -v || true
+            docker-compose down -v || true
             '''
         }
 
