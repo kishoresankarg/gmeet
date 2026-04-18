@@ -32,7 +32,7 @@ pipeline {
             steps {
                 echo "Verifying backend health..."
                 // Using the container name instead of localhost for container-to-container communication
-                sh 'curl http://localhost:8000/health'
+                sh 'curl http://meeting_notes_backend:8000/health'
             }
         }
     }
