@@ -1,6 +1,14 @@
 pipeline {
     agent any
 
+    triggers {
+        githubPush()
+    }
+
+    environment {
+        DOCKER_HUB_USER = "kishoresankarg"
+    }
+
     stages {
 
         stage('Clone') {
@@ -11,7 +19,7 @@ pipeline {
 
         stage('Cleanup Old Containers') {
             steps {
-                echo "Force cleaning old containers and networks..."
+                echo "Cleaning old containers..."
 
                 sh '''
                 docker compose down -v --remove-orphans || true
@@ -24,20 +32,26 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 echo "Building Docker images..."
-                sh 'docker compose build'
+
+                sh '''
+                docker compose build
+                '''
             }
         }
 
         stage('Run Containers') {
             steps {
-                echo "Starting fresh containers..."
-                sh 'docker compose up -d'
+                echo "Starting containers..."
+
+                sh '''
+                docker compose up -d
+                '''
             }
         }
 
         stage('Wait for Backend') {
             steps {
-                echo "Waiting for backend to become healthy..."
+                echo "Waiting for backend..."
 
                 sh '''
                 sleep 10
@@ -48,7 +62,7 @@ pipeline {
 
         stage('Test Backend') {
             steps {
-                echo "Testing backend health endpoint..."
+                echo "Testing backend..."
 
                 sh '''
                 docker run --rm \
@@ -58,11 +72,37 @@ pipeline {
                 '''
             }
         }
+
+        stage('Push to Docker Hub') {
+            steps {
+                echo "Pushing images to Docker Hub..."
+
+                sh '''
+                docker tag gmeet-backend $DOCKER_HUB_USER/gmeet-backend:latest
+                docker tag gmeet-frontend $DOCKER_HUB_USER/gmeet-frontend:latest
+
+                docker push $DOCKER_HUB_USER/gmeet-backend:latest
+                docker push $DOCKER_HUB_USER/gmeet-frontend:latest
+                '''
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                echo "Deploying to Kubernetes..."
+
+                sh '''
+                kubectl apply -f k8s/
+                kubectl rollout restart deployment backend
+                kubectl rollout restart deployment frontend
+                '''
+            }
+        }
     }
 
     post {
         always {
-            echo "Cleanup after build..."
+            echo "Cleaning up containers..."
 
             sh '''
             docker compose down -v || true
@@ -70,11 +110,11 @@ pipeline {
         }
 
         success {
-            echo "Build Successful!"
+            echo "Pipeline SUCCESS 🚀"
         }
 
         failure {
-            echo "Build Failed! Check logs."
+            echo "Pipeline FAILED ❌"
         }
     }
 }
