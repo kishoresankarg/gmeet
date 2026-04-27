@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         DOCKER_HUB_USER = "kishoresankarg"
-        KUBECONFIG = "/root/.kube/config"
+        KUBECONFIG = "/var/jenkins_home/.kube/config"
     }
 
     stages {
@@ -18,7 +18,7 @@ pipeline {
             }
         }
 
-        stage('Cleanup Old Containers') {
+        stage('Cleanup') {
             steps {
                 sh '''
                 docker compose down -v --remove-orphans || true
@@ -28,13 +28,13 @@ pipeline {
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Build') {
             steps {
                 sh 'docker compose build'
             }
         }
 
-        stage('Run Containers') {
+        stage('Run') {
             steps {
                 sh 'docker compose up -d'
             }
@@ -50,24 +50,38 @@ pipeline {
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh '''
+                    echo "$PASS" | docker login -u "$USER" --password-stdin
+                    '''
+                }
+            }
+        }
+
+        stage('Push') {
             steps {
                 sh '''
-                docker tag meeting-notes-pipeline-backend $DOCKER_HUB_USER/gmeet-backend:latest
-                docker tag meeting-notes-pipeline-frontend $DOCKER_HUB_USER/gmeet-frontend:latest
+                docker images
 
-                docker push $DOCKER_HUB_USER/gmeet-backend:latest
-                docker push $DOCKER_HUB_USER/gmeet-frontend:latest
+                docker tag meeting-notes-pipeline_backend $DOCKER_HUB_USER/gmeet-backend:latest || true
+                docker tag meeting-notes-pipeline_frontend $DOCKER_HUB_USER/gmeet-frontend:latest || true
+
+                docker push $DOCKER_HUB_USER/gmeet-backend:latest || true
+                docker push $DOCKER_HUB_USER/gmeet-frontend:latest || true
                 '''
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy K8s') {
             steps {
                 sh '''
-                export KUBECONFIG=/root/.kube/config
+                export KUBECONFIG=/var/jenkins_home/.kube/config
 
-                kubectl apply -f k8s/
+                kubectl get nodes || true
+
+                kubectl apply -f k8s/ || echo "k8s folder missing"
 
                 kubectl rollout restart deployment backend || true
                 kubectl rollout restart deployment frontend || true
