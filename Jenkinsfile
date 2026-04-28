@@ -1,6 +1,15 @@
 pipeline {
     agent any
 
+    triggers {
+        githubPush()
+    }
+
+    environment {
+        DOCKER_HUB_USER = "kishoresankarg"
+        KUBECONFIG = "/var/jenkins_home/.kube/config"
+    }
+
     stages {
 
         stage('Clone') {
@@ -9,10 +18,8 @@ pipeline {
             }
         }
 
-        stage('Cleanup Old Containers') {
+        stage('Cleanup') {
             steps {
-                echo "Force cleaning old containers and networks..."
-
                 sh '''
                 docker compose down -v --remove-orphans || true
                 docker rm -f meeting_notes_backend meeting_notes_frontend || true
@@ -21,40 +28,63 @@ pipeline {
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Build') {
             steps {
-                echo "Building Docker images..."
                 sh 'docker compose build'
             }
         }
 
-        stage('Run Containers') {
+        stage('Run') {
             steps {
-                echo "Starting fresh containers..."
                 sh 'docker compose up -d'
-            }
-        }
-
-        stage('Wait for Backend') {
-            steps {
-                echo "Waiting for backend to become healthy..."
-
-                sh '''
-                sleep 10
-                docker ps
-                '''
             }
         }
 
         stage('Test Backend') {
             steps {
-                echo "Testing backend health endpoint..."
-
                 sh '''
-                docker run --rm \
-                --network meeting-notes-pipeline_default \
-                curlimages/curl \
+                sleep 10
+                docker run --rm --network meeting-notes-pipeline_default curlimages/curl \
                 curl --retry 5 --retry-delay 5 http://meeting_notes_backend:8000/health
+                '''
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh '''
+                    echo "$PASS" | docker login -u "$USER" --password-stdin
+                    '''
+                }
+            }
+        }
+
+        stage('Push') {
+            steps {
+                sh '''
+                docker images
+
+                docker tag meeting-notes-pipeline_backend $DOCKER_HUB_USER/gmeet-backend:latest || true
+                docker tag meeting-notes-pipeline_frontend $DOCKER_HUB_USER/gmeet-frontend:latest || true
+
+                docker push $DOCKER_HUB_USER/gmeet-backend:latest || true
+                docker push $DOCKER_HUB_USER/gmeet-frontend:latest || true
+                '''
+            }
+        }
+
+        stage('Deploy K8s') {
+            steps {
+                sh '''
+                export KUBECONFIG=/var/jenkins_home/.kube/config
+
+                kubectl get nodes || true
+
+                kubectl apply -f k8s/ || echo "k8s folder missing"
+
+                kubectl rollout restart deployment backend || true
+                kubectl rollout restart deployment frontend || true
                 '''
             }
         }
@@ -62,19 +92,15 @@ pipeline {
 
     post {
         always {
-            echo "Cleanup after build..."
-
-            sh '''
-            docker compose down -v || true
-            '''
+            sh 'docker compose down -v || true'
         }
 
         success {
-            echo "Build Successful!"
+            echo "Pipeline SUCCESS 🚀"
         }
 
         failure {
-            echo "Build Failed! Check logs."
+            echo "Pipeline FAILED ❌"
         }
     }
-} 
+}
